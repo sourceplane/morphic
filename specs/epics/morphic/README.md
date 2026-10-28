@@ -9,7 +9,7 @@ makes a copy of it somebody else's product in one landing.**
 
 | | |
 |---|---|
-| Status | In progress — MO0 on main |
+| Status | In progress — MO1 on main: the site runs on Workers |
 | Upstream | [miurla/morphic](https://github.com/miurla/morphic) (Apache-2.0), Vercel's [Morphic](https://vercel.com/templates/next.js/morphic-ai-answer-engine-generative-ui), at `92224b0` |
 | Reference | [rag-chatbot](https://github.com/sourceplane/rag-chatbot) — an AI chat on Supabase through Hyperdrive, migrations, db-migrate, row-level security; [clerk-auth-starter](https://github.com/sourceplane/clerk-auth-starter) — the owner's keys handed to the Worker at deploy; [admin-dashboard](https://github.com/sourceplane/admin-dashboard) — a key generated in the database |
 | Key | `MO` |

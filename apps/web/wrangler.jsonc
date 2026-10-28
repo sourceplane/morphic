@@ -1,0 +1,65 @@
+// wrangler.template.jsonc is the source and wrangler.jsonc is rendered from
+// it by tooling/wire: edit the template, never the render. Two renders:
+//
+//   - committed: the render from wiring.fixture.json (`pnpm run wire:fixture`),
+//     a placeholder Hyperdrive id. `wrangler dev`, `next dev`, the dev verify
+//     lane and the composition's structure check (which runs BEFORE the build,
+//     in a fresh checkout) all read it, so it has to exist without a build.
+//     Edit this file and re-render; tests/web fails when the two disagree.
+//   - deployed: the stage and prod lanes re-render it inside their own job
+//     tree, before the build, from the wiring document the
+//     `cloudflare-hyperdrive` Terraform root lease-publishes
+//     (WIRING_CLOUDFLARE_HYPERDRIVE_<ENV>, apps/web/component.yaml).
+//
+// The workers-assets composition deploys one environment per job with no
+// wrangler `--env`, so a placeholder token names the environment a render is
+// for.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "morphic-web",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-10-01",
+  // global_fetch_strictly_public: every fetch the answer engine makes on a
+  // prompt's behalf (search providers, the fetch tool, favicons) leaves
+  // through the public internet, never to a zone of the account's own
+  // (lib/utils/safe-fetch.ts).
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "observability": { "enabled": true },
+  // The Supabase project's Postgres, fronted by Hyperdrive: the chats, their
+  // messages, the library, Better Auth's accounts and sessions. lib/db/index.ts
+  // builds a `postgres` client per request from env.HYPERDRIVE.connectionString
+  // (upstream read DATABASE_URL at module scope). Locally — `wrangler dev`,
+  // `opennextjs-cloudflare preview` and `next dev` through the platform proxy —
+  // the binding points at the localConnectionString below, a Postgres on
+  // localhost that `pnpm --filter @app/web migrate` has applied the schema to.
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "00000000000000000000000000000001",
+      "localConnectionString": "postgres://postgres:postgres@localhost:5432/morphic"
+    }
+  ],
+  // Upstream's configuration, as plain variables (none is a secret):
+  //   AUTH_PROVIDER     Better Auth — accounts in this product's own Postgres,
+  //                     upstream's provider for "self-hosted, multiple users".
+  //   AUTH_SIGNUP_MODE  invite: a workers.dev URL is public from its first
+  //                     deploy, and with open sign-up its first visitor would
+  //                     become the admin. The owner sets BOOTSTRAP_ADMIN_EMAIL,
+  //                     signs up as that address, then invites members (README,
+  //                     "First steps").
+  "vars": {
+    "AUTH_PROVIDER": "better-auth",
+    "AUTH_SIGNUP_MODE": "invite"
+  }
+  // Secrets are never vars. Each is OPTIONAL, an Orun secret the deploy sets on
+  // the Worker (component.yaml's optionalSecretEnv, tooling/wire/worker-secrets.mjs):
+  // BOOTSTRAP_ADMIN_EMAIL, a model provider's key (OPENAI_API_KEY,
+  // ANTHROPIC_API_KEY, GOOGLE_GENERATIVE_AI_API_KEY) and a search provider's
+  // (TAVILY_API_KEY, EXA_API_KEY, BRAVE_SEARCH_API_KEY). Locally they go in
+  // .dev.vars. Better Auth's signing key is generated in the database
+  // (packages/db, 200_app_secrets); a BETTER_AUTH_SECRET Worker secret wins.
+}
