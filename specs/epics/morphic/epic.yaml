@@ -1,0 +1,30 @@
+# The epic's declaration. metadata.name equals the directory name; metadata.key
+# is the task-key prefix this epic reserves (MO → MO-1, MO-2, …). Owner, target
+# date and health are the platform's — never written here.
+apiVersion: orun.io/v1
+kind: Epic
+metadata:
+  name: morphic
+  key: MO
+spec:
+  title: "Vercel's Morphic answer engine on Cloudflare Workers and Supabase"
+  summary: "Vercel's Morphic template — an AI answer engine with a generative UI: web search with cited sources, quick and adaptive modes, a model picker, chat history and sharing, a library, Better Auth accounts — run on Cloudflare Workers + Static Assets through @opennextjs/cloudflare, its Postgres a Supabase project reached through Hyperdrive, both provisioned by Terraform; upstream's schema, a generated Better Auth key and the Data API shut out applied by db-migrate; models and search connected by its owner after the build; and become an Orun baseline that takes a new product from nothing to live on stage and prod in one landing."
+  state: started
+  milestones:
+    - name: "MO0 — the spec"
+      exitCriteria:
+        - "the repository is born with its intent, CI, tooling and spec index, and this doc set and the task contracts are on main"
+      tasks: [MO-1]
+    - name: "MO1 — the answer engine on Workers and Supabase"
+      exitCriteria:
+        - "apps/web is the template on Next.js 16.3.8, built by OpenNext (webpack) into one Worker under Workers Paid's 10 MiB, its Postgres the HYPERDRIVE binding with a client per request behind upstream's db"
+        - "upstream's twenty-one migrations, a generated Better Auth key and the Data API shut out are packages/db migrations, applied by db-migrate; the Supabase and Hyperdrive roots provision stage and prod"
+        - "with no key the answer engine builds, serves and says no model is connected, sign-up invite-only; with a model key it answers and keeps the chat"
+        - "`pnpm typecheck`, `pnpm lint`, `pnpm test` (the template's own suite among them) and `pnpm build` are green"
+      tasks: [MO-2]
+    - name: "MO2 — a baseline"
+      exitCriteria:
+        - "blueprint.yaml (the console card) and repo-blueprint.yaml (the build) take a new product from nothing to live on stage and prod in one landing, then record it"
+        - "a product built from it carries the product only, renamed throughout to its own name, repository, Worker, Supabase project, Hyperdrive config and environment-variable prefix"
+        - "Baseline CI is green: contract tests, generated component docs, the blueprint read by the pinned orun, the leak gate, the offline bootstrap and the end-to-end tier"
+      tasks: [MO-3]

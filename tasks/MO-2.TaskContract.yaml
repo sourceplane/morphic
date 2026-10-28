@@ -1,0 +1,22 @@
+apiVersion: orun.io/v1
+kind: TaskContract
+metadata:
+  name: MO-2
+  title: "The answer engine on Workers and Supabase"
+spec:
+  goal: The answer engine runs on Cloudflare Workers + Static Assets with its Postgres a Supabase project reached through Hyperdrive, upstream's schema, a generated Better Auth key and the Data API shut out as migrations applied by db-migrate, the Supabase and Hyperdrive roots provisioning stage and prod, and models and search connected after the build
+  affects:
+    - apps/web
+    - packages/db
+    - infra
+    - tests
+    - tooling/migrations
+    - tooling/wire
+    - pnpm-lock.yaml
+    - pnpm-workspace.yaml
+    - README.md
+    - .gitignore
+  doneWhen:
+    - pnpm typecheck, lint, test and build are green
+    - the built Worker serves the answer engine over a migrated database, invite-only and saying no model is connected, and answers and keeps a chat once it has a model
+  gates: []
