@@ -7,5 +7,6 @@ folder is the adoption; the merge creates the epic in the workspace.
 
 | Epic | Cluster | Status | What it is |
 |------|---------|--------|------------|
+| [`morphic/`](./morphic/) | **MO** | In progress (MO0) | Vercel's Morphic — an AI answer engine with a generative UI, Better Auth accounts — on Cloudflare Workers with Supabase Postgres through Hyperdrive, and an Orun baseline that instantiates it in one landing (MO2) |
 
 As-built ≠ intent: what shipped lives in each epic's `IMPLEMENTATION-STATUS.md`.
