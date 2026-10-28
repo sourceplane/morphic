@@ -1,0 +1,32 @@
+# Local Worker variables and secrets for `wrangler dev` and `next dev`
+# (through the platform proxy). Copy to .dev.vars (git-ignored). The database
+# is not here: the Worker reaches it through the HYPERDRIVE binding
+# (wrangler.jsonc). In stage and prod the first block are Orun secrets the
+# deploy sets on the Worker (component.yaml, optionalSecretEnv); the rest are
+# Worker variables or secrets an owner sets with
+# `wrangler secret put <NAME> --name morphic-web-<env>`.
+
+# The address that may create the first account (sign-up is invite-only).
+# BOOTSTRAP_ADMIN_EMAIL=you@example.com
+# A model provider (at least one).
+# OPENAI_API_KEY=
+# ANTHROPIC_API_KEY=
+# GOOGLE_GENERATIVE_AI_API_KEY=
+# A search provider (Tavily unless SEARCH_API says otherwise).
+# TAVILY_API_KEY=
+# EXA_API_KEY=
+# BRAVE_SEARCH_API_KEY=
+
+# Upstream's other settings, named as upstream names them:
+# SEARCH_API=tavily              # tavily | exa | firecrawl | searxng
+# OPENAI_COMPATIBLE_API_KEY=
+# OPENAI_COMPATIBLE_API_BASE_URL=
+# OPENAI_COMPATIBLE_MODELS=
+# FIRECRAWL_API_KEY=
+# JINA_API_KEY=
+# SEARXNG_API_URL=
+# BETTER_AUTH_SECRET=            # wins over the key generated in the database
+# BETTER_AUTH_URL=               # with SMTP or OIDC: the canonical origin
+# SMTP_HOST= SMTP_PORT= SMTP_USER= SMTP_PASSWORD= EMAIL_FROM=
+# OIDC_ISSUER= OIDC_CLIENT_ID= OIDC_CLIENT_SECRET=
+# ENABLE_LANGFUSE_TRACING=true LANGFUSE_SECRET_KEY= LANGFUSE_PUBLIC_KEY=

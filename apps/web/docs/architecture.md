@@ -1,0 +1,41 @@
+# web — architecture
+
+Built by the turbo pipeline from `apps/web` and deployed with wrangler.
+
+|                     |                                                 |
+| ------------------- | ----------------------------------------------- |
+| Worker config       | `apps/web/wrangler.template.jsonc`              |
+| Entry               | `.open-next/worker.js`                          |
+| Compatibility date  | `2026-10-01`                                    |
+| Compatibility flags | `nodejs_compat`, `global_fetch_strictly_public` |
+
+## Bindings
+
+| Binding      | Kind                         | Source                                       |
+| ------------ | ---------------------------- | -------------------------------------------- |
+| `HYPERDRIVE` | Hyperdrive (pooled Postgres) | `hyperdrive_id` from `cloudflare-hyperdrive` |
+| `ASSETS`     | Static assets                | `.open-next/assets`                          |
+
+Identifiers marked _from_ a component are filled in at deploy time from
+that component's published outputs for the environment being deployed.
+
+## Variables
+
+`AUTH_PROVIDER`, `AUTH_SIGNUP_MODE`.
+
+## Wiring
+
+Resolved at deploy time from secrets the infrastructure lanes publish (names only):
+
+- `WIRING_CLOUDFLARE_HYPERDRIVE_PROD`
+- `WIRING_CLOUDFLARE_HYPERDRIVE_STAGE`
+
+## Secrets resolved by the lane (names only)
+
+- `ANTHROPIC_API_KEY` (optional)
+- `BOOTSTRAP_ADMIN_EMAIL` (optional)
+- `BRAVE_SEARCH_API_KEY` (optional)
+- `EXA_API_KEY` (optional)
+- `GOOGLE_GENERATIVE_AI_API_KEY` (optional)
+- `OPENAI_API_KEY` (optional)
+- `TAVILY_API_KEY` (optional)

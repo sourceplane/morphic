@@ -1,0 +1,21 @@
+{
+  "name": "@app/web-tests",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "lint": "eslint src"
+  },
+  "devDependencies": {
+    "@app/eslint-config": "workspace:*",
+    "@app/tsconfig": "workspace:*",
+    "@types/node": "^22.9.0",
+    "drizzle-orm": "0.45.2",
+    "postgres": "3.4.7",
+    "typescript": "5.9.2",
+    "vitest": "4.1.8"
+  }
+}

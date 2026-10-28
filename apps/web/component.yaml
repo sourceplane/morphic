@@ -1,0 +1,139 @@
+apiVersion: sourceplane.io/v1
+kind: Component
+metadata:
+  name: web
+  description: The AI answer engine with a generative UI from miurla/morphic (Next.js on Cloudflare Workers + Static Assets via @opennextjs/cloudflare, chat history and Better Auth accounts in Supabase Postgres through Hyperdrive, per environment)
+spec:
+  type: cloudflare-workers-assets-turbo
+  lifecycle: production
+  owner: platform
+  # Its pages, attached to it in the workspace's catalog: what the Docs
+  # library shows for it, and what the catalog's docs and runbook checks read.
+  # Generated from what this manifest and its sources declare.
+  docs:
+    overview: docs/overview.md
+    pages:
+      - { path: docs/architecture.md, role: architecture, title: Architecture }
+      - { path: docs/runbook.md, role: runbook, title: Runbook }
+  # `app`, not `web`: a domain and a component share one name space in the
+  # catalog, and a domain called `web` hid this component from it.
+  domain: app
+  path: apps/web
+  # Its own lane per environment: the Next.js build is the longest job in the
+  # plan, and a shared lane would wait on it.
+  lane: isolated
+  # INFRA BEFORE APP, ENFORCED ON MAIN. A merge to main converges the whole
+  # product in one run: the Supabase project, then the Hyperdrive config over
+  # its database, then the migrations — upstream's schema (chats, messages,
+  # parts, the library, usage, Better Auth's tables), the generated Better
+  # Auth key, the Data API shut out — then this Worker. Its deploy reads the Hyperdrive id
+  # (WIRING_CLOUDFLARE_HYPERDRIVE_<ENV>, rendered into the HYPERDRIVE binding)
+  # and needs the schema applied, and a job resolves its secrets when it
+  # STARTS — so it waits on both, `mode: enforced`, and the ids the applies
+  # lease-published are there. A pull request deploys nothing, so nothing on
+  # one waits: every edge is advisory there.
+  dependsOn:
+    - component: cloudflare-hyperdrive
+      mode: enforced
+      modeRules:
+        - mode: advisory
+          when:
+            triggerRef: github-pull-request
+    - component: db-migrate
+      mode: enforced
+      modeRules:
+        - mode: advisory
+          when:
+            triggerRef: github-pull-request
+  # The wiring documents the cloudflare-hyperdrive root lease-publishes, one
+  # per deployed environment; tooling/wire/live.mjs picks this job's.
+  secretEnv:
+    WIRING_CLOUDFLARE_HYPERDRIVE_STAGE: "secret://morphic/morphic/stage/WIRING_CLOUDFLARE_HYPERDRIVE"
+    WIRING_CLOUDFLARE_HYPERDRIVE_PROD: "secret://morphic/morphic/prod/WIRING_CLOUDFLARE_HYPERDRIVE"
+  # What the owner connects after the build, per environment, as Orun secrets
+  # (README, "Connect a model and a search provider"). OPTIONAL: a lane runs
+  # without any of them — a fresh product deploys and serves with "No enabled
+  # model available" in its model picker and sign-up closed until
+  # BOOTSTRAP_ADMIN_EMAIL is set. The build never sees them (buildCommand runs
+  # it with each one unset); the deploy sets the ones present as Worker
+  # secrets (tooling/wire/worker-secrets.mjs), which the app reads at request
+  # time.
+  optionalSecretEnv:
+    BOOTSTRAP_ADMIN_EMAIL: "secret://morphic/morphic/{{ .environment }}/BOOTSTRAP_ADMIN_EMAIL"
+    OPENAI_API_KEY: "secret://morphic/morphic/{{ .environment }}/OPENAI_API_KEY"
+    ANTHROPIC_API_KEY: "secret://morphic/morphic/{{ .environment }}/ANTHROPIC_API_KEY"
+    GOOGLE_GENERATIVE_AI_API_KEY: "secret://morphic/morphic/{{ .environment }}/GOOGLE_GENERATIVE_AI_API_KEY"
+    TAVILY_API_KEY: "secret://morphic/morphic/{{ .environment }}/TAVILY_API_KEY"
+    EXA_API_KEY: "secret://morphic/morphic/{{ .environment }}/EXA_API_KEY"
+    BRAVE_SEARCH_API_KEY: "secret://morphic/morphic/{{ .environment }}/BRAVE_SEARCH_API_KEY"
+  subscribe:
+    environments:
+      - name: dev
+        profile: verify
+      - name: stage
+        profile: verify
+        profileRules:
+          - profile: deploy
+            when:
+              triggerRef: github-push-main
+      - name: prod
+        profile: verify
+        profileRules:
+          - profile: deploy
+            when:
+              triggerRef: github-push-main
+  parameters:
+    nodeVersion: "22"
+    pnpmVersion: "10.12.1"
+
+    workspaceDir: ../..
+    appDir: .
+
+    turboFilter: "@app/web"
+    wranglerConfig: wrangler.jsonc
+
+    # @opennextjs/cloudflare emits a Worker entrypoint plus a static-assets
+    # directory bound via ASSETS — both deploy in one `wrangler deploy`.
+    workerEntrypoint: .open-next/worker.js
+    assetsDir: .open-next/assets
+
+    # Per-env worker name: morphic-web-{dev,stage,prod}.
+    workerName: morphic-web
+    environmentAwareWorkerName: true
+
+    # The account's workers.dev subdomain; exported to the smoke step as
+    # ${WORKERS_DEV_SUBDOMAIN} and used to build ${DEPLOYED_URL}.
+    workersDevSubdomain: your-workers-subdomain
+
+    installCommand: pnpm install --frozen-lockfile
+    # wrangler.jsonc is COMMITTED — the fixture render, so the composition's
+    # structure check (`test -f wrangler.jsonc`, before the build, in a fresh
+    # checkout) passes. Stage and prod re-render it here, in their own job
+    # tree, from this environment's wiring document, so the Worker binds the
+    # real Hyperdrive config; dev verifies with the fixture and has no wiring.
+    #
+    # The site's public origin (the layout's metadataBase: canonical and Open
+    # Graph links): the environment's SITE_URL when intent.yaml sets one (a
+    # custom domain), else its workers.dev URL. The subdomain is written out
+    # rather than read from ${WORKERS_DEV_SUBDOMAIN}: the composition exports
+    # that to the smoke step only. ${ORUN_ENVIRONMENT} the runner sets for
+    # every step.
+    #
+    # The owner's keys (optionalSecretEnv) are unset for the build — `env -u`,
+    # so no bundle and no build cache can hold one — and handed to the Worker
+    # after it, as Worker secrets (worker-secrets.mjs: `wrangler secret bulk`
+    # from a deploy lane, nothing from a verify lane).
+    buildCommand: if [ "${ORUN_ENVIRONMENT}" != dev ]; then node ../../tooling/wire/live.mjs --template wrangler.template.jsonc --out wrangler.jsonc --components cloudflare-hyperdrive --env "${ORUN_ENVIRONMENT}"; fi && NEXT_PUBLIC_SITE_URL="${SITE_URL:-https://morphic-web-${ORUN_ENVIRONMENT}.your-workers-subdomain.workers.dev}" env -u BOOTSTRAP_ADMIN_EMAIL -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GOOGLE_GENERATIVE_AI_API_KEY -u TAVILY_API_KEY -u EXA_API_KEY -u BRAVE_SEARCH_API_KEY pnpm exec turbo run build --filter=@app/web && node ../../tooling/wire/worker-secrets.mjs --worker "morphic-web-${ORUN_ENVIRONMENT}" --config wrangler.jsonc --secret BOOTSTRAP_ADMIN_EMAIL --secret OPENAI_API_KEY --secret ANTHROPIC_API_KEY --secret GOOGLE_GENERATIVE_AI_API_KEY --secret TAVILY_API_KEY --secret EXA_API_KEY --secret BRAVE_SEARCH_API_KEY
+
+    # Smoke: the answer engine's page renders (its input is in the server-
+    # rendered markup), /api/health answers ok — the database behind the
+    # HYPERDRIVE binding reachable and migrated, the generated Better Auth key
+    # in it — and the sign-in page renders. None calls a model or a search
+    # provider. Each response is buffered before grep so an early match cannot
+    # SIGPIPE curl.
+    smokeCommand: "html=$(curl -sfL \"${DEPLOYED_URL}/\") && echo \"${html}\" | grep -q 'placeholder=\"Ask anything...\"' && health=$(curl -sf \"${DEPLOYED_URL}/api/health\") && echo \"${health}\" | grep -q '\"ok\":true' && login=$(curl -sfL \"${DEPLOYED_URL}/auth/login\") && echo \"${login}\" | grep -q '</html>'"
+  labels:
+    team: platform
+    layer: delivery
+    surface: web
+    runtime: cloudflare
