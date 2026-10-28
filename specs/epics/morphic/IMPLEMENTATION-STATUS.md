@@ -4,7 +4,7 @@
 |---|---|---|
 | MO0 — the spec | ✅ | MO-1 |
 | MO1 — the answer engine on Workers and Supabase | ✅ | MO-2 |
-| MO2 — a baseline | planned | MO-3 |
+| MO2 — a baseline | ✅ | MO-3, tagged `baseline-v1` |
 
 ## Departures from the upstream template
 

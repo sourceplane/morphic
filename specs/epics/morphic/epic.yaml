@@ -9,7 +9,7 @@ metadata:
 spec:
   title: "Vercel's Morphic answer engine on Cloudflare Workers and Supabase"
   summary: "Vercel's Morphic template — an AI answer engine with a generative UI: web search with cited sources, quick and adaptive modes, a model picker, chat history and sharing, a library, Better Auth accounts — run on Cloudflare Workers + Static Assets through @opennextjs/cloudflare, its Postgres a Supabase project reached through Hyperdrive, both provisioned by Terraform; upstream's schema, a generated Better Auth key and the Data API shut out applied by db-migrate; models and search connected by its owner after the build; and become an Orun baseline that takes a new product from nothing to live on stage and prod in one landing."
-  state: started
+  state: completed
   milestones:
     - name: "MO0 — the spec"
       exitCriteria:
